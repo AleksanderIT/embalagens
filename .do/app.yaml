@@ -1,0 +1,43 @@
+name: etma-solucoes
+services:
+- name: backend
+  source_dir: /backend
+  github:
+    repo: seu-usuario/etma-solucoes
+    branch: main
+  run_command: npm start
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  envs:
+  - key: NODE_ENV
+    value: production
+  - key: JWT_SECRET
+    value: ${JWT_SECRET}
+  - key: MONGODB_URI
+    value: mongodb://root:root123@localhost:27017/etma?retryWrites=true&w=majority
+  - key: FRONTEND_URL
+    value: ${FRONTEND_URL}
+  - key: MAX_FILE_SIZE
+    value: "10485760"
+  - key: UPLOAD_PATH
+    value: uploads
+
+- name: frontend
+  source_dir: /frontend
+  github:
+    repo: seu-usuario/etma-solucoes
+    branch: main
+  run_command: npm start
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  envs:
+  - key: REACT_APP_API_URL
+    value: ${BACKEND_URL}
+
+databases:
+- name: mongodb
+  engine: MONGODB
+  version: "6.0"
+  size: db-s-1vcpu-1gb

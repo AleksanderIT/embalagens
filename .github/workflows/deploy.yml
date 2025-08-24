@@ -1,0 +1,169 @@
+name: Deploy ETMA Soluções
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        npm ci
+        
+    - name: Run backend tests
+      run: |
+        cd backend
+        npm test
+      env:
+        MONGODB_URI: mongodb://root:root123@localhost:27017/etma?retryWrites=true&w=majority
+        JWT_SECRET: test-secret
+        
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+        
+    - name: Run frontend tests
+      run: |
+        cd frontend
+        npm test -- --watchAll=false
+        
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+
+  deploy-backend:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Deploy to Heroku
+      uses: akhileshns/heroku-deploy@v3.12.12
+      with:
+        heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+        heroku_app_name: "etma-solucoes-api"
+        heroku_email: ${{ secrets.HEROKU_EMAIL }}
+        appdir: "backend"
+        healthcheck: "https://etma-solucoes-api.herokuapp.com/api/health"
+
+  deploy-frontend:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+        
+    - name: Build
+      run: |
+        cd frontend
+        npm run build
+      env:
+        REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
+        
+    - name: Deploy to Vercel
+      uses: amondnet/vercel-action@v20
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.ORG_ID }}
+        vercel-project-id: ${{ secrets.PROJECT_ID }}
+        working-directory: ./frontend
+        vercel-args: '--prod'
+
+  docker-build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+      
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        
+    - name: Build and push backend image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./backend
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/etma-backend:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./frontend
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/etma-frontend:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  notify:
+    needs: [deploy-backend, deploy-frontend, docker-build]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Notify on success
+      if: needs.deploy-backend.result == 'success' && needs.deploy-frontend.result == 'success'
+      run: |
+        echo "✅ Deploy completed successfully!"
+        echo "🌐 Frontend: https://etma-solucoes.vercel.app"
+        echo "🔧 Backend: https://etma-solucoes-api.herokuapp.com"
+        
+    - name: Notify on failure
+      if: needs.deploy-backend.result == 'failure' || needs.deploy-frontend.result == 'failure'
+      run: |
+        echo "❌ Deploy failed!"
+        echo "Check the logs above for more details."

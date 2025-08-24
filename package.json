@@ -1,0 +1,65 @@
+{
+  "name": "etma-solucoes",
+  "version": "1.0.0",
+  "description": "Site da ETMA Soluções - Especialistas em Embalagens",
+  "private": true,
+  "scripts": {
+    "dev": "./start-dev.sh",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm start",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "test:all": "./test-all.sh",
+    "test:coverage": "npm run test:coverage:backend && npm run test:coverage:frontend",
+    "test:coverage:backend": "cd backend && npm run test:coverage",
+    "test:coverage:frontend": "cd frontend && npm test -- --coverage --watchAll=false",
+    "test:watch": "concurrently \"npm run test:watch:backend\" \"npm run test:watch:frontend\"",
+    "test:watch:backend": "cd backend && npm run test:watch",
+    "test:watch:frontend": "cd frontend && npm test -- --watch",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "setup": "chmod +x setup.sh && ./setup.sh",
+    "docker:dev": "docker-compose up -d",
+    "docker:prod": "docker-compose -f docker-compose.prod.yml up -d",
+    "docker:down": "docker-compose down",
+    "docker:build": "docker-compose build",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:frontend": "cd frontend && npm run lint",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "clean": "npm run clean:backend && npm run clean:frontend",
+    "clean:backend": "cd backend && rm -rf node_modules dist coverage",
+    "clean:frontend": "cd frontend && rm -rf node_modules build coverage",
+    "swagger": "./test-swagger.sh"
+  },
+  "keywords": [
+    "embalagens",
+    "sustentabilidade",
+    "etma",
+    "react",
+    "nodejs",
+    "mongodb",
+    "typescript"
+  ],
+  "author": "ETMA Soluções",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^7.6.0",
+    "prettier": "^2.8.8"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seu-usuario/etma-solucoes.git"
+  },
+  "bugs": {
+    "url": "https://github.com/seu-usuario/etma-solucoes/issues"
+  },
+  "homepage": "https://etmasolucoes.com.br"
+}

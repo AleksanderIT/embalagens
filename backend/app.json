@@ -1,0 +1,45 @@
+{
+  "name": "ETMA Soluções API",
+  "description": "Backend API para o site da ETMA Soluções",
+  "repository": "https://github.com/seu-usuario/etma-solucoes",
+  "logo": "https://node-js-sample.herokuapp.com/node.png",
+  "keywords": ["node", "express", "mongodb", "api", "embalagens"],
+  "env": {
+    "NODE_ENV": {
+      "description": "Ambiente de execução",
+      "value": "production"
+    },
+    "JWT_SECRET": {
+      "description": "Chave secreta para JWT",
+      "generator": "secret"
+    },
+    "MONGODB_URI": {
+      "description": "URI de conexão com MongoDB",
+      "value": "mongodb://root:root123@localhost:27017/etma?retryWrites=true&w=majority"
+    },
+    "FRONTEND_URL": {
+      "description": "URL do frontend",
+      "value": "https://etma-solucoes.vercel.app"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "addons": [
+    {
+      "plan": "mongolab:sandbox",
+      "as": "MONGODB"
+    }
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "scripts": {
+    "postdeploy": "echo 'Deploy completed successfully!'"
+  }
+}
